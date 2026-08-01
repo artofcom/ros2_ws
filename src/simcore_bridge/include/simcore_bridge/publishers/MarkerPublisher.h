@@ -22,6 +22,8 @@ public:
     void PublishGoal(const simcore::Pose2D& pose);
 
     void PublishObstacles(const simcore::Simulation& simulation);
+
+    void PublishPath(const simcore::Pose2D& start, const simcore::Pose2D& goal);
 private:
 
     rclcpp::Node* node_;

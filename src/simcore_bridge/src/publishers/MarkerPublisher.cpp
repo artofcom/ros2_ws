@@ -133,4 +133,45 @@ void MarkerPublisher::PublishObstacles(
 
     obstaclePublisher_->publish(markers);
 }
+
+void MarkerPublisher::PublishPath(
+    const simcore::Pose2D& start,
+    const simcore::Pose2D& goal)
+{
+    visualization_msgs::msg::Marker marker;
+
+    marker.header.frame_id = "map";
+    marker.header.stamp = node_->now();
+
+    marker.ns = "path";
+    marker.id = 100;
+
+    marker.type =
+        visualization_msgs::msg::Marker::LINE_STRIP;
+
+    marker.action =
+        visualization_msgs::msg::Marker::ADD;
+
+    marker.scale.x = 0.05;
+
+    marker.color.r = 1.0f;
+    marker.color.g = 1.0f;
+    marker.color.b = 0.0f;
+    marker.color.a = 1.0f;
+
+    geometry_msgs::msg::Point p;
+
+    p.x = start.x;
+    p.y = start.y;
+    p.z = 0.02;
+
+    marker.points.push_back(p);
+
+    p.x = goal.x;
+    p.y = goal.y;
+
+    marker.points.push_back(p);
+
+    publisher_->publish(marker);
+}
 }

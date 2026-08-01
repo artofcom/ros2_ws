@@ -51,8 +51,15 @@ private:
         markerPublisher_.PublishRobot(pose);
         
         if (simulation_.HasGoal())
-            markerPublisher_.PublishGoal(simulation_.GetGoalPose());
+        {
+            const auto& goal = simulation_.GetGoalPose();
 
+            markerPublisher_.PublishGoal(goal);
+
+            markerPublisher_.PublishPath(
+                pose,
+                goal);
+        }
         markerPublisher_.PublishObstacles(simulation_);
 
         tfPublisher_.PublishRobot(pose);
