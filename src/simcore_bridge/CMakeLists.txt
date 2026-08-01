@@ -11,6 +11,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 # --------------------------------------------------
 # SimCore
@@ -36,8 +37,10 @@ target_link_libraries(simcore_bridge
     simcore
 )
 
-ament_target_dependencies(simcore_bridge
+ament_target_dependencies(
+    simcore_bridge
     rclcpp
+    geometry_msgs
 )
 
 install(TARGETS
