@@ -32,8 +32,17 @@ add_subdirectory(
 # Executable
 # --------------------------------------------------
 
-add_executable(simcore_bridge
+add_executable(
+    simcore_bridge
     src/main.cpp
+    src/publishers/PosePublisher.cpp
+    src/publishers/MarkerPublisher.cpp
+    src/publishers/TfPublisher.cpp
+)
+
+target_include_directories(simcore_bridge
+    PRIVATE
+        include
 )
 
 target_link_libraries(simcore_bridge
