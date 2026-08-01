@@ -10,6 +10,7 @@
 #include "geometry_msgs/msg/pose2_d.hpp"
 #include "geometry_msgs/msg/point.hpp"
 #include "visualization_msgs/msg/marker.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 
 using namespace std::chrono_literals;
 
@@ -21,7 +22,7 @@ public:
     {
         simulation_.Initialize();
         posePublisher_ = create_publisher<geometry_msgs::msg::Pose2D>("robot_pose", 10);
-        goalSubscriber_ = create_subscription<geometry_msgs::msg::Point>( "goal", 10,
+        goalSubscriber_ = create_subscription<geometry_msgs::msg::PoseStamped>( "/goal_pose", 10,
                   std::bind(&SimCoreNode::OnGoalReceived,
                   this,
                   std::placeholders::_1));
@@ -125,13 +126,13 @@ private:
         goalMarkerPublisher_->publish(marker);
 }
 
-    void OnGoalReceived(const geometry_msgs::msg::Point::SharedPtr msg)
+    void OnGoalReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
     {
         auto goal = std::make_shared<simcore::Goal>();
 
         goal->SetPosition(
-            static_cast<float>(msg->x),
-            static_cast<float>(msg->y));
+            static_cast<float>(msg->pose.position.x),
+            static_cast<float>(msg->pose.position.y));
 
         currentGoal_ = goal->GetPose();
         hasGoal_ = true;
@@ -141,8 +142,8 @@ private:
         RCLCPP_INFO(
             get_logger(),
             "New Goal: (%.2f, %.2f)",
-            msg->x,
-            msg->y);
+            msg->pose.position.x,
+            msg->pose.position.y);
     }
 
     rclcpp::Publisher<geometry_msgs::msg::Pose2D>::SharedPtr posePublisher_;
@@ -150,7 +151,7 @@ private:
 private:
     simcore::Simulation simulation_;
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr goalSubscriber_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goalSubscriber_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr robotMarkerPublisher_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr goalMarkerPublisher_;
 
