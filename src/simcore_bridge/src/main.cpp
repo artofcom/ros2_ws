@@ -11,6 +11,9 @@
 #include "geometry_msgs/msg/point.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "tf2_ros/transform_broadcaster.h"
+#include "geometry_msgs/msg/transform_stamped.hpp"
+#include <tf2/LinearMath/Quaternion.h>
 
 using namespace std::chrono_literals;
 
@@ -29,7 +32,8 @@ public:
 
         robotMarkerPublisher_ = create_publisher<visualization_msgs::msg::Marker>( "robot_marker", 10);
         goalMarkerPublisher_ = create_publisher<visualization_msgs::msg::Marker>( "goal_marker", 10);
-        
+        tfBroadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+
         timer_ = create_wall_timer(
             100ms,
             std::bind(&SimCoreNode::OnTimer, this));
@@ -60,6 +64,7 @@ private:
 
         publishMarker(pose);
         publishGoalMarker();
+        publishTF(pose);
     }
     
     void publishMarker(simcore::Pose2D& pose)
@@ -126,6 +131,29 @@ private:
         goalMarkerPublisher_->publish(marker);
 }
 
+    void publishTF(const simcore::Pose2D& pose)
+    {
+        geometry_msgs::msg::TransformStamped transform;
+
+        transform.header.stamp = now();
+        transform.header.frame_id = "map";
+        transform.child_frame_id = "base_link";
+
+        transform.transform.translation.x = pose.x;
+        transform.transform.translation.y = pose.y;
+        transform.transform.translation.z = 0.0;
+
+        tf2::Quaternion q;
+        q.setRPY(0.0, 0.0, pose.theta);
+
+        transform.transform.rotation.x = q.x();
+        transform.transform.rotation.y = q.y();
+        transform.transform.rotation.z = q.z();
+        transform.transform.rotation.w = q.w();
+
+        tfBroadcaster_->sendTransform(transform);
+    }
+
     void OnGoalReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
     {
         auto goal = std::make_shared<simcore::Goal>();
@@ -154,6 +182,7 @@ private:
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goalSubscriber_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr robotMarkerPublisher_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr goalMarkerPublisher_;
+    std::unique_ptr<tf2_ros::TransformBroadcaster> tfBroadcaster_;
 
     simcore::Pose2D currentGoal_;
     bool hasGoal_ = false;
