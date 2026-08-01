@@ -3,10 +3,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "simcore/Simulation.h"
-#include "simcore/World.h"
-#include "simcore/Robot.h"
 #include "simcore/Pose2D.h"
-#include "simcore/Goal.h"
 #include "geometry_msgs/msg/pose2_d.hpp"
 #include "geometry_msgs/msg/point.hpp"
 #include "visualization_msgs/msg/marker.hpp"
@@ -22,6 +19,7 @@ using namespace std::chrono_literals;
 
 class SimCoreNode : public rclcpp::Node
 {
+    static constexpr float kTimeStep = 0.1f;
 public:
     SimCoreNode()
         : Node("simcore_bridge")
@@ -50,14 +48,9 @@ public:
 private:
     void OnTimer()
     {
-        simulation_.Update(0.1f);
+        simulation_.Update(kTimeStep);
 
-        auto& world = simulation_.GetWorld();
-        if (world.GetRobotCount() == 0)
-            return;
-        
-        auto robot = world.GetRobot(0);
-        auto pose = robot->GetPose();
+        const auto& pose = simulation_.GetRobotPose();
 
         posePublisher_.Publish(pose);
         markerPublisher_.PublishRobot(pose);
@@ -102,16 +95,12 @@ private:
 
     void OnGoalReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
     {
-        auto goal = std::make_shared<simcore::Goal>();
-
-        goal->SetPosition(
-            static_cast<float>(msg->pose.position.x),
-            static_cast<float>(msg->pose.position.y));
-
-        currentGoal_ = goal->GetPose();
+        currentGoal_ = simulation_.GetGoalPose();
         hasGoal_ = true;
 
-        simulation_.GetWorld().SetGoal(goal);
+        simulation_.SetGoal(
+        static_cast<float>(msg->pose.position.x),
+        static_cast<float>(msg->pose.position.y));
 
         RCLCPP_INFO(
             get_logger(),
@@ -130,8 +119,7 @@ private:
     
     simcore_bridge::MarkerPublisher markerPublisher_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr goalMarkerPublisher_;
-    //std::unique_ptr<tf2_ros::TransformBroadcaster> tfBroadcaster_;
-
+    
     simcore_bridge::TfPublisher tfPublisher_;
 
     simcore::Pose2D currentGoal_;
