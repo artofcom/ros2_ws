@@ -47,10 +47,15 @@ private:
         const auto& pose = simulation_.GetRobotPose();
 
         posePublisher_.Publish(pose);
+        
         markerPublisher_.PublishRobot(pose);
-        tfPublisher_.PublishRobot(pose);
+        
         if (simulation_.HasGoal())
             markerPublisher_.PublishGoal(simulation_.GetGoalPose());
+
+        markerPublisher_.PublishObstacles(simulation_);
+
+        tfPublisher_.PublishRobot(pose);
     }
     
     void OnGoalReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg)

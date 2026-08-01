@@ -2,7 +2,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "visualization_msgs/msg/marker.hpp"
-
+#include "visualization_msgs/msg/marker_array.hpp"
+#include "simcore/Simulation.h"
 #include "simcore/Pose2D.h"
 
 namespace simcore_bridge
@@ -19,12 +20,17 @@ public:
     void PublishRobot(const simcore::Pose2D& pose);
 
     void PublishGoal(const simcore::Pose2D& pose);
+
+    void PublishObstacles(const simcore::Simulation& simulation);
 private:
 
     rclcpp::Node* node_;
 
     rclcpp::Publisher<
         visualization_msgs::msg::Marker>::SharedPtr publisher_;
+
+    rclcpp::Publisher<
+        visualization_msgs::msg::MarkerArray>::SharedPtr obstaclePublisher_;
 };
 
 }

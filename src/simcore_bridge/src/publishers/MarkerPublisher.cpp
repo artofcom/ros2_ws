@@ -1,4 +1,5 @@
 #include "simcore_bridge/publishers/MarkerPublisher.h"
+#include "simcore/Obstacle.h"
 
 namespace simcore_bridge
 {
@@ -12,6 +13,12 @@ MarkerPublisher::MarkerPublisher(
         node_->create_publisher<
             visualization_msgs::msg::Marker>(
             topicName,
+            10);
+
+    obstaclePublisher_ =
+        node_->create_publisher<
+            visualization_msgs::msg::MarkerArray>(
+            "obstacle_markers",
             10);
 }
 
@@ -77,5 +84,53 @@ void MarkerPublisher::PublishGoal(
     marker.color.b = 0.1;
 
     publisher_->publish(marker);
+}
+
+void MarkerPublisher::PublishObstacles(
+    const simcore::Simulation& simulation)
+{
+    visualization_msgs::msg::MarkerArray markers;
+
+    for(size_t i = 0; i < simulation.GetObstacleCount(); ++i)
+    {
+        auto obstacle = simulation.GetObstacle(i);
+
+        visualization_msgs::msg::Marker marker;
+
+        marker.header.frame_id = "map";
+        marker.header.stamp = node_->now();
+
+        marker.ns = "obstacle";
+        marker.id = static_cast<int>(i);
+
+        marker.type =
+            visualization_msgs::msg::Marker::CYLINDER;
+
+        marker.action =
+            visualization_msgs::msg::Marker::ADD;
+
+        const auto& pose = obstacle->GetPose();
+
+        marker.pose.position.x = pose.x;
+        marker.pose.position.y = pose.y;
+        marker.pose.position.z = 0.0;
+
+        marker.pose.orientation.w = 1.0;
+
+        float diameter = obstacle->GetRadius() * 2.0f;
+
+        marker.scale.x = diameter;
+        marker.scale.y = diameter;
+        marker.scale.z = 1.0;
+
+        marker.color.r = 0.2f;
+        marker.color.g = 0.2f;
+        marker.color.b = 1.0f;
+        marker.color.a = 1.0f;
+
+        markers.markers.push_back(marker);
+    }
+
+    obstaclePublisher_->publish(markers);
 }
 }
