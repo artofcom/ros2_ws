@@ -4,13 +4,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "simcore/Simulation.h"
 #include "simcore/Pose2D.h"
-#include "geometry_msgs/msg/pose2_d.hpp"
-#include "geometry_msgs/msg/point.hpp"
-#include "visualization_msgs/msg/marker.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
-#include "tf2_ros/transform_broadcaster.h"
-#include "geometry_msgs/msg/transform_stamped.hpp"
-#include <tf2/LinearMath/Quaternion.h>
 #include "simcore_bridge/publishers/PosePublisher.h"
 #include "simcore_bridge/publishers/MarkerPublisher.h"
 #include "simcore_bridge/publishers/TfPublisher.h"
@@ -55,49 +49,12 @@ private:
         posePublisher_.Publish(pose);
         markerPublisher_.PublishRobot(pose);
         tfPublisher_.PublishRobot(pose);
-        
-        publishGoalMarker();
+        if (simulation_.HasGoal())
+            markerPublisher_.PublishGoal(simulation_.GetGoalPose());
     }
     
-    void publishGoalMarker()
-    {
-        if (!hasGoal_)
-            return;
-
-        visualization_msgs::msg::Marker marker;
-
-        marker.header.frame_id = "map";
-        marker.header.stamp = now();
-
-        marker.ns = "goal";
-        marker.id = 0;
-
-        marker.type = visualization_msgs::msg::Marker::CYLINDER;
-        marker.action = visualization_msgs::msg::Marker::ADD;
-
-        marker.pose.position.x = currentGoal_.x;
-        marker.pose.position.y = currentGoal_.y;
-        marker.pose.position.z = 0.0;
-
-        marker.pose.orientation.w = 1.0;
-
-        marker.scale.x = 0.4;
-        marker.scale.y = 0.4;
-        marker.scale.z = 0.1;
-
-        marker.color.a = 1.0;
-        marker.color.r = 1.0;
-        marker.color.g = 0.1;
-        marker.color.b = 0.1;
-
-        goalMarkerPublisher_->publish(marker);
-}
-
     void OnGoalReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
     {
-        currentGoal_ = simulation_.GetGoalPose();
-        hasGoal_ = true;
-
         simulation_.SetGoal(
         static_cast<float>(msg->pose.position.x),
         static_cast<float>(msg->pose.position.y));
@@ -121,9 +78,6 @@ private:
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr goalMarkerPublisher_;
     
     simcore_bridge::TfPublisher tfPublisher_;
-
-    simcore::Pose2D currentGoal_;
-    bool hasGoal_ = false;
 };
 
 int main(int argc, char* argv[])

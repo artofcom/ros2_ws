@@ -16,9 +16,9 @@ public:
         rclcpp::Node* node,
         const std::string& topicName);
 
-    void PublishRobot(
-        const simcore::Pose2D& pose);
+    void PublishRobot(const simcore::Pose2D& pose);
 
+    void PublishGoal(const simcore::Pose2D& pose);
 private:
 
     rclcpp::Node* node_;
