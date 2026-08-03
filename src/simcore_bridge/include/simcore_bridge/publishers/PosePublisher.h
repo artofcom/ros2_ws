@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "geometry_msgs/msg/pose2_d.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "simcore/Pose2D.h"
 
@@ -19,7 +19,7 @@ public:
     void Publish(const simcore::Pose2D& pose);
 
 private:
-    rclcpp::Publisher<geometry_msgs::msg::Pose2D>::SharedPtr publisher_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_;
 };
 
 }
